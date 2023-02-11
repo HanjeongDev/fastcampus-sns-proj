@@ -64,8 +64,10 @@ public class PostService {
         if(postEntity.getUser() != userEntity) {
             throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission wht %s", userName, postId));
         }
-
+        likeEntityRepository.deleteAllByPost(postEntity);
+        commentEntityRepository.deleteAllByPost(postEntity);
         postEntityRepository.delete(postEntity);
+
     }
     public Page<Post> getList(Pageable pageable) {
         return postEntityRepository.findAll(pageable).map(Post::fromEntity);
@@ -88,8 +90,8 @@ public class PostService {
 
         likeEntityRepository.save(LikeEntity.of(userEntity, postEntity));
 
-        alarmEntityRepository.save(AlarmEntity.of(userEntity,
-                AlarmType.NEW_COMMENT_ON_POST,
+        alarmEntityRepository.save(AlarmEntity.of(postEntity.getUser(),
+                AlarmType.NEW_LIKE_ON_POST,
                 new AlarmArgs(userEntity.getId(), postEntity.getId())));
 
     }
@@ -110,7 +112,7 @@ public class PostService {
         //comment save
         commentEntityRepository.save(CommentEntity.of(userEntity,postEntity,comment));
 
-        alarmEntityRepository.save(AlarmEntity.of(userEntity,
+        alarmEntityRepository.save(AlarmEntity.of(postEntity.getUser(),
                                                     AlarmType.NEW_COMMENT_ON_POST,
                                                     new AlarmArgs(userEntity.getId(), postEntity.getId())));
     }
